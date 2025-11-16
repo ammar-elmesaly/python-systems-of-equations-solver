@@ -1,11 +1,12 @@
 from matrix import Mat
+from ui import render
+import tkinter as tk
 
 def main():
-    mat = Mat((2, 3))
-    mat.add_row([1, 1, 8])
-    mat.add_row([1, -1, 2])
 
-    mat.solve()
+    window = tk.Tk()
+
+    render(window)
 
 if __name__ == "__main__":
     main()
