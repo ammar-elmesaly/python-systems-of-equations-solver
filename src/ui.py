@@ -98,7 +98,8 @@ def render(window, equation_number=3):
             for c in range(len(grid[r])):
                 row.append(grid[r][c].get())
             values.append(row)
-
+        
+        # TODO
         print(values)
 
     solve_btn = tk.Button(
