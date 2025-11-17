@@ -61,11 +61,11 @@ class Mat:
 
         for i in range(result.size[0]):
             result.divide(i, result.get_row(i)[0])
-
-        for j in range(0, i):
-            result.multiply(i, -1)
-            result.sum(i, j)
-            result.divide(i, result.get_row(i)[j+1])
+            
+            for j in range(0, i):
+                result.multiply(i, -1)
+                result.sum(i, j)
+                result.divide(i, result.get_row(i)[j+1])
         
         return result
     

@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+from matrix import SYMBOLS
+from solver import solve
 
 FONT_FAMILY = "Segoe UI"
 FONT_SIZE = 20
@@ -96,11 +98,18 @@ def render(window, equation_number=3):
         for r in range(len(grid)):
             row = []
             for c in range(len(grid[r])):
-                row.append(grid[r][c].get())
+                try:
+                    row.append(int(grid[r][c].get()))
+                
+                except ValueError:
+                    print("ERROR!")
+                    break
+                    # TODO show error message
+
             values.append(row)
         
-        # TODO
-        print(values)
+        print(values, equation_number)
+        solve(values, equation_number)
 
     solve_btn = tk.Button(
         window,
