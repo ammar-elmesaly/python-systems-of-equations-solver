@@ -18,7 +18,18 @@ grid = None
 def create_grid(window, rows, cols):
     entries = []
 
-    for r in range(rows):
+    for c in range(cols - 1):
+        label = tk.Label(
+            window,
+            width=12,
+            justify="center",
+            fg=COLORS['primary'],
+            font=(FONT_FAMILY, FONT_SIZE),
+            text=SYMBOLS[c]
+        )
+        label.grid(row=0, column=c, padx=3, pady=2)
+
+    for r in range(1, rows + 1):
         row_entries = []
 
         for c in range(cols):
