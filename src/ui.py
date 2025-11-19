@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import ttk
 from matrix import SYMBOLS
 from solver import solve
 
@@ -10,6 +9,7 @@ FONT_SIZE_LARGE = 28
 COLORS = {
     "primary": "#0d6efd",
     "secondary": "#6c757d",
+    "error": "#dc3545",
     "text": "#eeeeee"
 }
 
@@ -49,6 +49,55 @@ def create_grid(window, rows, cols):
 
     return entries
 
+
+def render_error(window, message):
+    error_window = tk.Toplevel(window)
+    error_window.title("Error")
+    error_window.minsize(600,300)
+    error_window.resizable(False, False)  # Disable resizing window
+    # Make the window modal (user must close it before interacting with main window)
+    error_window.grab_set()
+    error_window.transient(window)  # Keep the error window on top of the main window
+
+    center_frame = tk.Frame(error_window)
+    center_frame.pack(expand=True)
+
+    error_label = tk.Label(center_frame, font=(FONT_FAMILY, FONT_SIZE))
+    error_label.pack(anchor='center', padx=10, pady=2)
+
+    error_task_btn = tk.Button(error_window,
+            command=error_window.destroy,
+            bg=COLORS["error"],
+            fg=COLORS["text"],
+            font=(FONT_FAMILY, FONT_SIZE),
+            relief='flat',
+            text='OK'
+            )
+    error_task_btn.pack(pady=30)
+
+    error_label.configure(text=message)
+
+
+def render_solutions(window, solutions: list[float]):
+    solution_window = tk.Toplevel(window)
+    solution_window.title("Solutions")
+    solution_window.minsize(600,300)
+    solution_window.resizable(False, True)
+    # Make the window modal (user must close it before interacting with main window)
+    solution_window.grab_set()
+    solution_window.transient(window)  # Keep the error window on top of the main window
+
+    for i in range(len(solutions)):
+        label = tk.Label(
+            solution_window,
+            width=12,
+            justify="center",
+            font=(FONT_FAMILY, FONT_SIZE_LARGE),
+            text=f"{SYMBOLS[i]} = {round(solutions[i], 4)}"
+        )
+        label.pack(anchor='center')
+
+
 def select_equation_number(window, number):
     try:
         number = int(number)
@@ -60,8 +109,7 @@ def select_equation_number(window, number):
         render(window, number)
     
     except ValueError:
-        # TODO
-        print("ERROR!")
+        render_error(window, message="Number of equations must be a valid integer > 1.")
 
 
 def render(window, equation_number=3):
@@ -69,7 +117,7 @@ def render(window, equation_number=3):
     window.minsize(1024, 768)
 
     # title
-    main_label = ttk.Label(window, text="Equation Solver", font=(FONT_FAMILY, FONT_SIZE_LARGE))
+    main_label = tk.Label(window, text="Equation Solver", font=(FONT_FAMILY, FONT_SIZE_LARGE))
     main_label.pack(pady=20)
 
     # select number of equations
@@ -110,17 +158,15 @@ def render(window, equation_number=3):
             row = []
             for c in range(len(grid[r])):
                 try:
-                    row.append(int(grid[r][c].get()))
-                
+                    row.append(float(grid[r][c].get()))
                 except ValueError:
-                    print("ERROR!")
-                    break
-                    # TODO show error message
+                    render_error(window, message="All coefficients must not be empty.")
+                    return
 
             values.append(row)
-        
-        print(values, equation_number)
-        solve(values, equation_number)
+
+        solutions = solve(values, equation_number)
+        render_solutions(window, solutions)
 
     solve_btn = tk.Button(
         window,
@@ -130,10 +176,8 @@ def render(window, equation_number=3):
         font=(FONT_FAMILY, FONT_SIZE),
         relief='flat',
         text='Solve',
-        pady=2,
-        padx=4
     )
-    solve_btn.pack(pady=10)
+    solve_btn.pack(padx=4, pady=80)
 
     window.mainloop()
 

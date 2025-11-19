@@ -81,7 +81,12 @@ class Mat:
         return result
     
 
-    def solve(self):
+    def solve(self) -> list[float]:
         result = self.reduced_row_echelon()
+
+        solutions = []
+
         for i in range(self.size[0]):
-            print(f"{SYMBOLS[i].upper()} = {result.get_row(i)[-1]}")
+            solutions.append(result.get_row(i)[-1])
+        
+        return solutions

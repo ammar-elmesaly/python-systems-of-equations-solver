@@ -1,4 +1,3 @@
-from matrix import Mat
 from ui import render
 import tkinter as tk
 
