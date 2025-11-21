@@ -164,9 +164,13 @@ def render(window, equation_number=3):
                     return
 
             values.append(row)
-
-        solutions = solve(values, equation_number)
-        render_solutions(window, solutions)
+        
+        try:
+            solutions = solve(values, equation_number)
+            render_solutions(window, solutions)
+        
+        except ValueError:
+            render_error(window, "Math Error!")
 
     solve_btn = tk.Button(
         window,

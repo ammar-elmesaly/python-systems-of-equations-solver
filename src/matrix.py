@@ -15,6 +15,10 @@ class Mat:
         
         self._data.append(row)
 
+    def swap_rows(self, r1, r2):
+        temp = self.get_row(r1)
+        self._data[r1] = self.get_row(r2)
+        self._data[r2] = temp
 
     def print(self):
         for row in self._data:
@@ -55,17 +59,51 @@ class Mat:
         
         return result
 
+    def find_nonzero_lead(self, start, col):  # This searches for nonzero lead in a specific column
+        for r in range(start, self.size[0]):
+            if self.get_row(r)[col] != 0:
+                return r
+        
+        return -1
 
     def row_echelon(self):
         result = self.copy()
 
-        for i in range(result.size[0]):
-            result.divide(i, result.get_row(i)[0])
+        for r in range(result.size[0]):  # r for row
+            lead = result.get_row(r)[0]
+
+            if lead == 0 and r == 0:
+                non_zero_lead_row = result.find_nonzero_lead(r + 1, 0)  # start searching from the second row
+                
+                if non_zero_lead_row == -1:
+                    raise ValueError
+                
+                result.swap_rows(r, non_zero_lead_row)
+                result.divide(r, result.get_row(r)[0])
             
-            for j in range(0, i):
-                result.multiply(i, -1)
-                result.sum(i, j)
-                result.divide(i, result.get_row(i)[j+1])
+            if lead != 0:
+                result.divide(r, result.get_row(r)[0])
+            
+            for prev in range(0, r):  #
+
+                if lead != 0:
+                    result.multiply(r, -1)
+                    result.sum(r, prev)
+
+                lead = result.get_row(r)[prev + 1]
+                
+                if lead == 0 and r == prev + 1:
+                    non_zero_lead_row = result.find_nonzero_lead(r + 1, prev + 1)  # start searching from the second row
+                    
+                    if non_zero_lead_row == -1:
+                        raise ValueError
+                    
+                    result.swap_rows(r, non_zero_lead_row)
+                
+                    result.divide(r, result.get_row(r)[prev + 1])
+                
+                if lead != 0:
+                    result.divide(r, result.get_row(r)[prev + 1])
         
         return result
     
@@ -74,9 +112,9 @@ class Mat:
         result = self.copy()
         result = result.row_echelon()
         
-        for i in range(result.size[0]-2, -1, -1):
-            for j in range(i+1, result.size[0]):
-                result.multiply_then_sum(i, j, -result.get_row(i)[j])
+        for r in range(result.size[0] - 2, -1, -1):
+            for prev in range(r + 1, result.size[0]):
+                result.multiply_then_sum(r, prev, -result.get_row(r)[prev])
         
         return result
     
