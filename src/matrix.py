@@ -1,5 +1,15 @@
 SYMBOLS = "xyzwabcdefghijklmnopqrstuv"
 
+class InfiniteSolutionsError(Exception):
+    # The system has infinitely many solutions.
+    pass
+
+
+class InconsistentSystemError(Exception):
+    # The system has no solution.
+    pass
+
+
 class Mat:
     def __init__(self, size):
         self.size = size
@@ -51,7 +61,7 @@ class Mat:
         return self._data[row]
         
 
-    def copy(self):
+    def copy_matrix(self):
         result = Mat(self.size)
 
         for row in self._data:
@@ -59,15 +69,36 @@ class Mat:
         
         return result
 
+
     def find_nonzero_lead(self, start, col):  # This searches for nonzero lead in a specific column
         for r in range(start, self.size[0]):
             if self.get_row(r)[col] != 0:
                 return r
         
         return -1
+    
+
+    def is_inconsistent_row(self, row):
+        for i in range(self.size[1] - 1):
+            if self.get_row(row)[i] != 0:
+                return False
+        
+        if self.get_row(row)[-1] == 0:
+            return False
+        
+        return True
+
+
+
+    def is_inconsistent(self):
+        for r in range(self.size[0]):  # r for row
+            if self.is_inconsistent_row(r):
+                return True
+        
+        return False
 
     def row_echelon(self):
-        result = self.copy()
+        result = self.copy_matrix()
 
         for r in range(result.size[0]):  # r for row
             lead = result.get_row(r)[0]
@@ -76,7 +107,10 @@ class Mat:
                 non_zero_lead_row = result.find_nonzero_lead(r + 1, 0)  # start searching from the second row
                 
                 if non_zero_lead_row == -1:
-                    raise ValueError
+                    if self.is_inconsistent():
+                        raise InconsistentSystemError
+                    else:
+                        raise InfiniteSolutionsError
                 
                 result.swap_rows(r, non_zero_lead_row)
                 result.divide(r, result.get_row(r)[0])
@@ -84,7 +118,7 @@ class Mat:
             if lead != 0:
                 result.divide(r, result.get_row(r)[0])
             
-            for prev in range(0, r):  #
+            for prev in range(0, r):
 
                 if lead != 0:
                     result.multiply(r, -1)
@@ -96,7 +130,10 @@ class Mat:
                     non_zero_lead_row = result.find_nonzero_lead(r + 1, prev + 1)  # start searching from the second row
                     
                     if non_zero_lead_row == -1:
-                        raise ValueError
+                        if self.is_inconsistent():
+                            raise InconsistentSystemError
+                        else:
+                            raise InfiniteSolutionsError
                     
                     result.swap_rows(r, non_zero_lead_row)
                 
@@ -109,7 +146,7 @@ class Mat:
     
 
     def reduced_row_echelon(self):
-        result = self.copy()
+        result = self.copy_matrix()
         result = result.row_echelon()
         
         for r in range(result.size[0] - 2, -1, -1):

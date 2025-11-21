@@ -1,5 +1,5 @@
 import tkinter as tk
-from matrix import SYMBOLS
+from matrix import SYMBOLS, InfiniteSolutionsError, InconsistentSystemError
 from solver import solve
 
 FONT_FAMILY = "Segoe UI"
@@ -18,16 +18,29 @@ grid = None
 def create_grid(window, rows, cols):
     entries = []
 
-    for c in range(cols - 1):
-        label = tk.Label(
-            window,
-            width=12,
-            justify="center",
-            fg=COLORS['primary'],
-            font=(FONT_FAMILY, FONT_SIZE),
-            text=SYMBOLS[c]
-        )
-        label.grid(row=0, column=c, padx=3, pady=2)
+    if cols > 26:  # Use x1, x2, ..., xn if more than symbols
+        for c in range(cols - 1):
+            label = tk.Label(
+                window,
+                width=12,
+                justify="center",
+                fg=COLORS['primary'],
+                font=(FONT_FAMILY, FONT_SIZE),
+                text=f"x{c}"
+            )
+            label.grid(row=0, column=c, padx=3, pady=2)
+    
+    else:  # else, use x, y, z, w, a, b, c, ...
+        for c in range(cols - 1):
+            label = tk.Label(
+                window,
+                width=12,
+                justify="center",
+                fg=COLORS['primary'],
+                font=(FONT_FAMILY, FONT_SIZE),
+                text=SYMBOLS[c]
+            )
+            label.grid(row=0, column=c, padx=3, pady=2)
 
     for r in range(1, rows + 1):
         row_entries = []
@@ -87,15 +100,27 @@ def render_solutions(window, solutions: list[float]):
     solution_window.grab_set()
     solution_window.transient(window)  # Keep the error window on top of the main window
 
-    for i in range(len(solutions)):
-        label = tk.Label(
-            solution_window,
-            width=12,
-            justify="center",
-            font=(FONT_FAMILY, FONT_SIZE_LARGE),
-            text=f"{SYMBOLS[i]} = {round(solutions[i], 4)}"
-        )
-        label.pack(anchor='center')
+    if len(solutions) > 26:  # Use x1, x2, ..., xn if more than symbols
+        for i in range(len(solutions)):
+            label = tk.Label(
+                solution_window,
+                width=12,
+                justify="center",
+                font=(FONT_FAMILY, FONT_SIZE_LARGE),
+                text=f"X{i} = {round(solutions[i], 4)}"
+            )
+            label.pack(anchor='center')
+    
+    else:  # else, use x, y, z, w, a, b, c, ...
+        for i in range(len(solutions)):
+            label = tk.Label(
+                solution_window,
+                width=12,
+                justify="center",
+                font=(FONT_FAMILY, FONT_SIZE_LARGE),
+                text=f"{SYMBOLS[i]} = {round(solutions[i], 4)}"
+            )
+            label.pack(anchor='center')
 
 
 def select_equation_number(window, number):
@@ -160,7 +185,7 @@ def render(window, equation_number=3):
                 try:
                     row.append(float(grid[r][c].get()))
                 except ValueError:
-                    render_error(window, message="All coefficients must not be empty.")
+                    render_error(window, message="All coefficients must be non empty number.")
                     return
 
             values.append(row)
@@ -169,8 +194,11 @@ def render(window, equation_number=3):
             solutions = solve(values, equation_number)
             render_solutions(window, solutions)
         
-        except ValueError:
-            render_error(window, "Math Error!")
+        except InconsistentSystemError:
+            render_error(window, "The system is inconsistent.")
+        
+        except InfiniteSolutionsError:
+            render_error(window, "The system has infinite number of solutions.")
 
     solve_btn = tk.Button(
         window,
