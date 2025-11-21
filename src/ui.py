@@ -26,7 +26,7 @@ def create_grid(window, rows, cols):
                 justify="center",
                 fg=COLORS['primary'],
                 font=(FONT_FAMILY, FONT_SIZE),
-                text=f"x{c}"
+                text=f"X{c}"
             )
             label.grid(row=0, column=c, padx=3, pady=2)
     
@@ -153,7 +153,6 @@ def render(window, equation_number=3):
         font=(FONT_FAMILY, FONT_SIZE),
         relief='flat'
     )
-
     number_entry.insert(0, str(equation_number))
     number_entry.pack(pady=10)
 
@@ -170,9 +169,75 @@ def render(window, equation_number=3):
     )
     select_btn.pack()
 
+    # -------------------------------------------------------
+    # SCROLLABLE GRID AREA (Canvas + Scrollbars) - with centering
+    # -------------------------------------------------------
+    outer_frame = tk.Frame(window)
+    outer_frame.pack(expand=True, fill="both")
 
-    center_frame = tk.Frame(window)
-    center_frame.pack(expand=True)
+    # scrollbars
+    v_scroll = tk.Scrollbar(outer_frame, orient="vertical")
+    h_scroll = tk.Scrollbar(outer_frame, orient="horizontal")
+    v_scroll.pack(side="right", fill="y")
+    h_scroll.pack(side="bottom", fill="x")
+
+    # canvas
+    canvas = tk.Canvas(
+        outer_frame,
+        yscrollcommand=v_scroll.set,
+        xscrollcommand=h_scroll.set,
+        highlightthickness=0
+    )
+    canvas.pack(side="left", fill="both", expand=True)
+
+    v_scroll.config(command=canvas.yview)
+    h_scroll.config(command=canvas.xview)
+
+    # frame inside canvas (this will contain the grid)
+    center_frame = tk.Frame(canvas)
+    canvas_window = canvas.create_window((0, 0), window=center_frame, anchor="nw")
+
+    # When the content (center_frame) changes size, update scrollregion.
+    def on_frame_configure(event=None):
+        # Ask canvas to recompute scrollregion from content size
+        center_frame.update_idletasks()
+        fw = center_frame.winfo_reqwidth()
+        fh = center_frame.winfo_reqheight()
+
+        # Ensure scrollregion covers either the content size or the canvas size
+        cw = canvas.winfo_width()
+        ch = canvas.winfo_height()
+        max_w = max(fw, cw)
+        max_h = max(fh, ch)
+        canvas.configure(scrollregion=(0, 0, max_w, max_h))
+
+    center_frame.bind("<Configure>", on_frame_configure)
+
+    # When the canvas itself resizes, center the frame inside it (if the canvas is larger).
+    def on_canvas_configure(event):
+        # sizes
+        canvas_width = event.width
+        canvas_height = event.height
+
+        # make sure we have up-to-date requested size of the content
+        center_frame.update_idletasks()
+        frame_width = center_frame.winfo_reqwidth()
+        frame_height = center_frame.winfo_reqheight()
+
+        # compute top-left coords to center content (or 0 if content larger than canvas)
+        x = max((canvas_width - frame_width) // 2, 0)
+        y = max((canvas_height - frame_height) // 2, 0)
+
+        # move the canvas window containing the frame
+        canvas.coords(canvas_window, x, y)
+
+        # update scrollregion too (keeps scrollbars consistent)
+        max_w = max(frame_width + x, canvas_width)
+        max_h = max(frame_height + y, canvas_height)
+        canvas.configure(scrollregion=(0, 0, max_w, max_h))
+
+    canvas.bind("<Configure>", on_canvas_configure)
+    # -------------------------------------------------------
 
     # equation grid
     grid = create_grid(center_frame, equation_number, equation_number + 1)
