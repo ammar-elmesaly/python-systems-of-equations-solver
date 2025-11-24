@@ -1,4 +1,5 @@
 SYMBOLS = "xyzwabcdefghijklmnopqrstuv"
+print_matrix_dbg = True
 
 class InfiniteSolutionsError(Exception):
     # The system has infinitely many solutions.
@@ -29,6 +30,9 @@ class Mat:
         temp = self.get_row(r1)
         self._data[r1] = self.get_row(r2)
         self._data[r2] = temp
+        print(f"Swapped R{r1 + 1} and R{r2 + 1}")
+        self.print_matrix_dbg()
+
 
     def print(self):
         for row in self._data:
@@ -40,22 +44,32 @@ class Mat:
     def divide(self, row, num):
         for i in range(self.size[1]):
             self._data[row][i] = self.get_row(row)[i] / num
+        
+        print(f"Divided R{row + 1} by {num}")
+        self.print_matrix_dbg()
 
 
     def multiply(self, row, num):
         for i in range(self.size[1]):
             self._data[row][i] = self.get_row(row)[i] * num
-    
+        
+        print(f"Multiplied R{row + 1} by {num}")
+        self.print_matrix_dbg()
 
     def sum(self, r1, r2):
         for i in range(self.size[1]):
             self._data[r1][i] += self.get_row(r2)[i]
+        
+        print(f"R{r1 + 1} -> R{r1 + 1} + R{r2 + 1}")
+        self.print_matrix_dbg()
     
 
     def multiply_then_sum(self, r1, r2, num):
         for i in range(self.size[1]):
             self._data[r1][i] += num * self.get_row(r2)[i]
         
+        print(f"R{r1 + 1} -> R{r1 + 1} + {num} x R{r2 + 1}")
+        self.print_matrix_dbg()
 
     def get_row(self, row):
         return self._data[row]
@@ -107,9 +121,11 @@ class Mat:
                 non_zero_lead_row = result.find_nonzero_lead(r + 1, 0)  # start searching from the second row
                 
                 if non_zero_lead_row == -1:
-                    if self.is_inconsistent():
+                    if result.is_inconsistent():
+                        print("The system is inconsistent")
                         raise InconsistentSystemError
                     else:
+                        print("The system has infinite number of solutions")
                         raise InfiniteSolutionsError
                 
                 result.swap_rows(r, non_zero_lead_row)
@@ -130,9 +146,11 @@ class Mat:
                     non_zero_lead_row = result.find_nonzero_lead(r + 1, prev + 1)  # start searching from the second row
                     
                     if non_zero_lead_row == -1:
-                        if self.is_inconsistent():
+                        if result.is_inconsistent():
+                            print("The system is inconsistent")
                             raise InconsistentSystemError
                         else:
+                            print("The system has infinite number of solutions")
                             raise InfiniteSolutionsError
                     
                     result.swap_rows(r, non_zero_lead_row)
@@ -142,6 +160,7 @@ class Mat:
                 if lead != 0:
                     result.divide(r, result.get_row(r)[prev + 1])
         
+        print("Finished converting to row echelon.\n")
         return result
     
 
@@ -153,10 +172,13 @@ class Mat:
             for prev in range(r + 1, result.size[0]):
                 result.multiply_then_sum(r, prev, -result.get_row(r)[prev])
         
+        print("Finished converting to reduced row echelon.\n")
         return result
     
 
     def solve(self) -> list[float]:
+        print("\n=============================\n")
+        print("Attempting to solve the system:\n")
         result = self.reduced_row_echelon()
 
         solutions = []
@@ -164,4 +186,11 @@ class Mat:
         for i in range(self.size[0]):
             solutions.append(result.get_row(i)[-1])
         
+        print("Solved!")
         return solutions
+    
+    def print_matrix_dbg(self):
+        if print_matrix_dbg:
+            print("\n")
+            self.print()
+            print("\n")
